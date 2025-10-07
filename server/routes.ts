@@ -458,9 +458,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : `http://localhost:5000`;
+      // Construct base URL from request or environment
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const host = req.headers.host || 'localhost:5000';
+      const baseUrl = `${protocol}://${host}`;
 
       // Generate unique external reference ID for ToyyibPay
       const externalReferenceNo = crypto.randomUUID();
@@ -765,9 +766,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : `http://localhost:5000`;
+      // Construct base URL from request or environment
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const host = req.headers.host || 'localhost:5000';
+      const baseUrl = `${protocol}://${host}`;
 
       // Generate unique external reference ID for Billplz
       const externalReferenceNo = crypto.randomUUID();

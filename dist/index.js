@@ -1186,7 +1186,9 @@ async function registerRoutes(app2) {
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : `http://localhost:5000`;
+      const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+      const host = req.headers.host || "localhost:5000";
+      const baseUrl = `${protocol}://${host}`;
       const externalReferenceNo = crypto2.randomUUID();
       const billCode = await createBill({
         billName: `AECOIN Order #${externalReferenceNo.substring(0, 8)}`,
@@ -1417,7 +1419,9 @@ async function registerRoutes(app2) {
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : `http://localhost:5000`;
+      const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+      const host = req.headers.host || "localhost:5000";
+      const baseUrl = `${protocol}://${host}`;
       const externalReferenceNo = crypto2.randomUUID();
       const billResponse = await createBill2({
         description: `AECOIN Order #${externalReferenceNo.substring(0, 8)}`,
