@@ -85,8 +85,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const state = crypto.randomBytes(16).toString('hex');
     req.session.oauthState = state;
     
-    const authUrl = getDiscordAuthUrl(state);
-    res.redirect(authUrl);
+    // Save session before redirect to ensure state is persisted
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error during OAuth initiation:", err);
+        return res.status(500).send("Authentication failed");
+      }
+      
+      const authUrl = getDiscordAuthUrl(state);
+      res.redirect(authUrl);
+    });
   });
 
   // Discord OAuth flow - Step 2: Handle callback

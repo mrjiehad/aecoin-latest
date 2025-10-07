@@ -915,8 +915,14 @@ async function registerRoutes(app2) {
   app2.get("/api/auth/discord", (req, res) => {
     const state = crypto2.randomBytes(16).toString("hex");
     req.session.oauthState = state;
-    const authUrl = getDiscordAuthUrl(state);
-    res.redirect(authUrl);
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error during OAuth initiation:", err);
+        return res.status(500).send("Authentication failed");
+      }
+      const authUrl = getDiscordAuthUrl(state);
+      res.redirect(authUrl);
+    });
   });
   app2.get("/api/auth/discord/callback", async (req, res) => {
     const { code, state } = req.query;
@@ -1748,6 +1754,7 @@ async function registerRoutes(app2) {
 import fs from "fs";
 import path from "path";
 var app = express();
+app.set("trust proxy", 1);
 function log(message, source = "express") {
   const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
     hour: "numeric",

@@ -6,6 +6,9 @@ import path from "path";
 
 const app = express();
 
+// Trust proxy - required for secure cookies behind reverse proxy (Nginx/load balancer)
+app.set('trust proxy', 1);
+
 // Logging utility
 function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
