@@ -1,0 +1,233 @@
+**GOAL:** Refactor this repo so that local dev stays smooth, and production deploy on VPS is dead simple (PM2 + Nginx). Fix common pitfalls: importing `vite` in production, missing env vars, TS build paths, static serving, and predictable scripts.
+
+### Requirements (do all of these)
+
+1. **Split dev vs prod server behavior**
+
+   * In production, **do NOT import or require `vite`** at all. No `createViteServer()` in production.
+   * Create `server/src/index.ts` that:
+
+     * loads `.env` with `dotenv.config()` at the very top,
+     * mounts simple API (`GET /api/health -> {ok:true}`),
+     * serves static files from `client/dist`,
+     * SPA fallback: `res.sendFile(dist/index.html)` for non-API routes,
+     * reads `PORT` from env (default 3000),
+     * clean error logging.
+
+2. **TypeScript build**
+
+   * Add `server/tsconfig.json` with `outDir: "dist"` and ESM compatible config.
+   * Ensure `client` Vite build goes to `client/dist` (default ok).
+   * After `npm run build`, I must have:
+
+     * `client/dist/**`
+     * `server/dist/index.js` (compiled from TS)
+
+3. **Package scripts (root)**
+
+   * `"build:client": "npm --prefix client run build"`
+   * `"build:server": "tsc -p server"`
+   * `"build": "npm run build:client && npm run build:server"`
+   * `"start": "NODE_ENV=production node server/dist/index.js"`
+   * Keep dev scripts intact (vite dev etc.). If needed, add `"dev:server": "ts-node server/src/index.ts"` only for local, but prod must be compiled JS.
+
+4. **client/package.json**
+
+   * Ensure `"build": "vite build"`, `"dev": "vite"`, `"preview": "vite preview"` exist.
+
+5. **Environment variables**
+
+   * Create `.env.example` with keys that the app needs (e.g. `SESSION_SECRET=changeme`, `DATABASE_URL=postgres://...`, `PORT=3000`).
+   * Make server throw helpful error if critical vars missing (only at startup), but default `PORT` is fine.
+
+6. **PM2**
+
+   * Add `ecosystem.config.cjs`:
+
+     ```js
+     module.exports = {
+       apps: [{
+         name: "app",
+         script: "server/dist/index.js",
+         node_args: "--enable-source-maps",
+         env: {
+           NODE_ENV: "production"
+           // Prefer .env for secrets; only keep non-secret defaults here if needed.
+         }
+       }]
+     }
+     ```
+   * PM2 must start successfully after `npm run build`.
+
+7. **deploy.sh (idempotent)**
+
+   * Add/update `deploy.sh` to do:
+
+     * `git pull --rebase`
+     * `npm ci || npm install`
+     * `npm run build`
+     * `pm2 start ecosystem.config.cjs || true`
+     * `pm2 reload app || pm2 restart app`
+     * `pm2 save`
+   * Echo friendly logs for each step.
+
+8. **Routing**
+
+   * All `/api/*` routes should stay API. Everything else falls back to SPA.
+   * Ensure static path is correct relative to compiled `server/dist/index.js`. Use `fileURLToPath` + `path.resolve` so it works from anywhere.
+
+9. **No SSR in production unless already implemented**
+
+   * If the current code used Vite’s dev middleware SSR, then keep that **only behind** `if (process.env.NODE_ENV !== 'production')` and make production path use the static `client/dist` files.
+   * Absolutely no `import('vite')` in production code path.
+
+10. **Acceptance criteria**
+
+* Fresh VPS: `npm install && npm run build && npm start` serves the app on `:3000` with static assets and SPA fallback working, no Vite import error, and `/api/health` returns `{ok:true}`.
+* `pm2 start ecosystem.config.cjs` works and keeps the app running.
+* `npm run build` reproducibly emits `server/dist/index.js` and `client/dist/**`.
+
+### Files to create / modify (show me diffs or final contents)
+
+* `server/src/index.ts` (production-safe express server)
+* `server/tsconfig.json` (ESM + outDir dist)
+* `package.json` (root scripts)
+* `client/package.json` (ensure build/dev scripts)
+* `.env.example`
+* `ecosystem.config.cjs`
+* `deploy.sh` (bash, executable)
+* Any helper types or utils if needed
+
+### Code templates (adapt paths as needed)
+
+**server/src/index.ts**
+
+```ts
+import "dotenv/config";
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = express();
+
+app.use(express.json());
+
+// Simple API
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+// Static (Vite output)
+const distDir = path.resolve(__dirname, "../../client/dist");
+app.use(express.static(distDir));
+
+// SPA fallback (non-API)
+app.get(/^\/(?!api).*/, (_req, res) => {
+  res.sendFile(path.join(distDir, "index.html"));
+});
+
+const PORT = Number(process.env.PORT || 3000);
+app.listen(PORT, () => {
+  console.log(`[server] running on :${PORT} (NODE_ENV=${process.env.NODE_ENV})`);
+});
+```
+
+**server/tsconfig.json**
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}
+```
+
+**package.json (root) – scripts section**
+
+```json
+{
+  "scripts": {
+    "build:client": "npm --prefix client run build",
+    "build:server": "tsc -p server",
+    "build": "npm run build:client && npm run build:server",
+    "start": "NODE_ENV=production node server/dist/index.js",
+    "dev:server": "tsx watch server/src/index.ts" // optional for local
+  }
+}
+```
+
+**client/package.json – ensure**
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+**.env.example**
+
+```
+NODE_ENV=production
+PORT=3000
+SESSION_SECRET=change_me
+DATABASE_URL=postgres://user:pass@host:5432/dbname?sslmode=require
+```
+
+**ecosystem.config.cjs**
+
+```js
+module.exports = {
+  apps: [{
+    name: "app",
+    script: "server/dist/index.js",
+    node_args: "--enable-source-maps",
+    env: {
+      NODE_ENV: "production"
+    }
+  }]
+}
+```
+
+**deploy.sh**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[deploy] pull"
+git pull --rebase
+
+echo "[deploy] install"
+npm ci || npm install
+
+echo "[deploy] build"
+npm run build
+
+echo "[deploy] pm2"
+pm2 start ecosystem.config.cjs || true
+pm2 reload app || pm2 restart app
+pm2 save
+
+echo "[deploy] done"
+```
+
+> Pastikan `deploy.sh` executable: `chmod +x deploy.sh`.
+
+### Final check
+
+* Remove any production path that does `import('vite')` or references Vite dev server.
+* Confirm that `npm run build` then `npm start` serves `client/dist` + SPA fallback without errors.
+* Keep current project functionality intact.
+
