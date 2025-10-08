@@ -41,19 +41,19 @@ function serveStatic(app: express.Express) {
 // Billplz callback needs raw body for X-Signature verification
 app.use("/api/billplz/callback", express.text({ type: 'application/x-www-form-urlencoded' }));
 
-// Apply JSON middleware for all other routes
+// Apply JSON middleware for all other routes with increased limit for base64 images
 app.use((req, res, next) => {
   if (req.path === '/api/billplz/callback') {
     return next();
   }
-  express.json()(req, res, next);
+  express.json({ limit: '10mb' })(req, res, next);
 });
 
 app.use((req, res, next) => {
   if (req.path === '/api/billplz/callback') {
     return next(); // Already handled with raw text middleware
   }
-  express.urlencoded({ extended: false })(req, res, next);
+  express.urlencoded({ extended: false, limit: '10mb' })(req, res, next);
 });
 
 // Validate SESSION_SECRET exists

@@ -54,11 +54,9 @@ export function AdminSidebar() {
       {/* User Footer */}
       <div className="p-4 border-t border-yellow-500/20">
         <div className="flex items-center gap-3 mb-3">
-          <img
-            src={user?.avatar || "/default-avatar.png"}
-            alt={user?.username}
-            className="w-10 h-10 rounded-full border-2 border-yellow-400"
-          />
+          <div className="w-10 h-10 rounded-full border-2 border-yellow-400 bg-yellow-400 flex items-center justify-center text-black font-bold">
+            {user?.username?.substring(0, 2).toUpperCase() || 'AD'}
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">{user?.username}</p>
             <p className="text-xs text-yellow-400">Administrator</p>

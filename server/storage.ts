@@ -71,6 +71,7 @@ export interface IStorage {
   getPlayerRanking(userId: string): Promise<PlayerRanking | undefined>;
   createOrUpdatePlayerRanking(ranking: InsertPlayerRanking): Promise<PlayerRanking>;
   updateRankingImage(userId: string, imageUrl: string, crownType?: string): Promise<PlayerRanking | undefined>;
+  deletePlayerRanking(userId: string): Promise<boolean>;
   getTopPlayers(limit: number): Promise<PlayerRanking[]>;
   
   // Payment settings operations
@@ -336,6 +337,11 @@ export class DbStorage implements IStorage {
       .where(eq(playerRankings.userId, userId))
       .returning();
     return result[0];
+  }
+
+  async deletePlayerRanking(userId: string): Promise<boolean> {
+    const result = await db.delete(playerRankings).where(eq(playerRankings.userId, userId)).returning();
+    return result.length > 0;
   }
 
   async getTopPlayers(limit: number = 100): Promise<PlayerRanking[]> {

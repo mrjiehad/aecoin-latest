@@ -1309,6 +1309,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Create or update ranking
+  app.post("/api/admin/rankings", requireAdmin, async (req, res) => {
+    try {
+      const count = await storage.getAllPlayerRankings();
+      if (count.length >= 10 && !req.body.userId) {
+        return res.status(400).json({ message: "Maximum 10 players allowed" });
+      }
+      const ranking = await storage.createOrUpdatePlayerRanking(req.body);
+      res.json(ranking);
+    } catch (error: any) {
+      console.error("Admin ranking creation error:", error);
+      res.status(500).json({ message: "Failed to create ranking" });
+    }
+  });
+
+  // Admin: Update ranking
+  app.patch("/api/admin/rankings/:userId", requireAdmin, async (req, res) => {
+    try {
+      const ranking = await storage.createOrUpdatePlayerRanking({
+        userId: req.params.userId,
+        ...req.body
+      });
+      res.json(ranking);
+    } catch (error: any) {
+      console.error("Admin ranking update error:", error);
+      res.status(500).json({ message: "Failed to update ranking" });
+    }
+  });
+
   // Admin: Update ranking image and crown
   app.patch("/api/admin/rankings/:userId/image", requireAdmin, async (req, res) => {
     try {
@@ -1321,6 +1350,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Admin ranking image update error:", error);
       res.status(500).json({ message: "Failed to update ranking image" });
+    }
+  });
+
+  // Admin: Delete ranking
+  app.delete("/api/admin/rankings/:userId", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deletePlayerRanking(req.params.userId);
+      if (!success) {
+        return res.status(404).json({ message: "Ranking not found" });
+      }
+      res.json({ message: "Ranking deleted successfully" });
+    } catch (error: any) {
+      console.error("Admin ranking deletion error:", error);
+      res.status(500).json({ message: "Failed to delete ranking" });
     }
   });
 
