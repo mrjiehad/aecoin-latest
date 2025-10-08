@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import AdminLayout from "@/components/AdminLayout";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -153,8 +154,7 @@ export default function AdminCoupons() {
 
   if (!user?.isAdmin) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <Card className="bg-zinc-900 border-yellow-500/20">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bebas text-yellow-400 mb-4">ACCESS DENIED</h2>
