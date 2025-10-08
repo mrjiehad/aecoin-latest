@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -149,21 +148,23 @@ export default function AdminPackages() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Card className="bg-zinc-900 border-yellow-500/20">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bebas text-yellow-400 mb-4">ACCESS DENIED</h2>
-            <p className="text-zinc-400">Administrator access required</p>
-            <Button
-              onClick={() => navigate("/")}
-              className="mt-4"
-              data-testid="button-home"
-            >
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <Card className="bg-zinc-900 border-yellow-500/20">
+            <CardContent className="p-8 text-center">
+              <h2 className="text-2xl font-bebas text-yellow-400 mb-4">ACCESS DENIED</h2>
+              <p className="text-zinc-400">Administrator access required</p>
+              <Button
+                onClick={() => navigate("/")}
+                className="mt-4"
+                data-testid="button-home"
+              >
+                Return Home
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
     );
   }
 
@@ -217,10 +218,8 @@ export default function AdminPackages() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
-
-      <main className="max-w-7xl mx-auto px-4 py-8 mt-20">
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-5xl font-bebas text-yellow-400 mb-2">
@@ -548,9 +547,7 @@ export default function AdminPackages() {
             )}
           </CardContent>
         </Card>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
