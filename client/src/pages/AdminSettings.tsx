@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -9,6 +12,8 @@ import { Loader2 } from "lucide-react";
 import type { PaymentSetting } from "@shared/schema";
 
 export default function AdminSettings() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
   // Fetch payment settings
@@ -19,11 +24,7 @@ export default function AdminSettings() {
   // Update payment setting mutation
   const updateSettingMutation = useMutation({
     mutationFn: async ({ gateway, enabled }: { gateway: string; enabled: boolean }) => {
-      return apiRequest(`/api/admin/payment-settings/${gateway}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ enabled }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return apiRequest('PATCH', `/api/admin/payment-settings/${gateway}`, { enabled });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/payment-settings'] });
@@ -54,9 +55,25 @@ export default function AdminSettings() {
     );
   }
 
+  if (!user?.isAdmin) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Card className="bg-zinc-900 border-yellow-500/20">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-2xl font-bebas text-yellow-400 mb-4">ACCESS DENIED</h2>
+            <p className="text-zinc-400">Administrator access required</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-black text-white flex">
+      <AdminSidebar />
+
+      <main className="flex-1 ml-64 p-8">
+        <div className="max-w-4xl">
         <div className="mb-8">
           <h1 className="font-bebas text-5xl text-[#FFEB3B] mb-2 tracking-wide">
             ADMIN SETTINGS
@@ -135,7 +152,8 @@ export default function AdminSettings() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,10 +126,10 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
+    <div className="min-h-screen bg-black text-white flex">
+      <AdminSidebar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 mt-20">
+      <main className="flex-1 ml-64 p-8">
         <div className="mb-8">
           <h1 className="text-5xl font-bebas text-yellow-400 mb-2">
             ADMIN DASHBOARD
@@ -306,8 +305,6 @@ export default function AdminOrders() {
           </CardContent>
         </Card>
       </main>
-
-      <Footer />
     </div>
   );
 }
