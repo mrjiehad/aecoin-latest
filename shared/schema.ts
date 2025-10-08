@@ -166,7 +166,7 @@ export type Coupon = typeof coupons.$inferSelect;
 // Player rankings table - Leaderboard data
 export const playerRankings = pgTable("player_rankings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().unique(), // Player ID (doesn't need to be a registered user)
   playerName: text("player_name").notNull(), // In-game name
   stars: integer("stars").notNull().default(0), // Achievement/score system
   rank: integer("rank").notNull(), // Position in leaderboard
