@@ -83,7 +83,7 @@ export default function AdminRankings() {
       stars: 0,
       rank: 1,
       imageUrl: null,
-      crownType: null,
+      crownType: "none",
     },
   });
 
@@ -180,7 +180,7 @@ export default function AdminRankings() {
       stars: ranking.stars,
       rank: ranking.rank,
       imageUrl: ranking.imageUrl,
-      crownType: ranking.crownType,
+      crownType: ranking.crownType || "none",
     });
     setIsDialogOpen(true);
   };
@@ -212,10 +212,15 @@ export default function AdminRankings() {
   };
 
   const onSubmit = (data: RankingFormData) => {
+    const submitData = {
+      ...data,
+      crownType: data.crownType === "none" ? null : data.crownType,
+    };
+    
     if (editingRanking) {
-      updateMutation.mutate({ userId: editingRanking.userId, data });
+      updateMutation.mutate({ userId: editingRanking.userId, data: submitData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(submitData);
     }
   };
 
@@ -375,7 +380,7 @@ export default function AdminRankings() {
                         <FormLabel>Crown Type (Optional)</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value || ""}
+                          value={field.value || "none"}
                         >
                           <FormControl>
                             <SelectTrigger className="bg-black border-zinc-700" data-testid="select-crownType">
@@ -383,7 +388,7 @@ export default function AdminRankings() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-zinc-900 border-yellow-500/20">
-                            <SelectItem value="">No Crown</SelectItem>
+                            <SelectItem value="none">No Crown</SelectItem>
                             {crownTypes.map((crown) => (
                               <SelectItem key={crown.value} value={crown.value}>
                                 <span className={crown.color}>{crown.label}</span>

@@ -4,7 +4,33 @@
 
 AECOIN Store is a gaming e-commerce platform for selling virtual GTA Online currency (AECOIN packages). The application features a cyberpunk/neon-themed dark interface, Discord OAuth authentication, dual payment gateways (ToyyibPay + Billplz), and automated code delivery via email and FiveM database integration.
 
-## Recent Updates (Production Hardening & Payment Gateway Optimization - COMPLETED)
+## Recent Updates (Admin Dashboard Enhancement - COMPLETED)
+
+### Latest Fixes (January 2025):
+1. **Package Image Upload Fix** ✅
+   - Increased Express body parser limit from 100kb to 10MB
+   - Handles base64 encoded package images without payload errors
+   - Server logs confirm successful package updates
+
+2. **Admin Rankings Full CRUD System** ✅
+   - Expanded from 3 to 10 player rankings with complete CRUD operations
+   - Backend API routes: POST, PATCH, DELETE /api/admin/rankings
+   - Frontend form with all fields: userId, playerName, stars, rank (1-10)
+   - Image upload with base64 encoding (2MB client validation)
+   - Crown type selection: gold, silver, bronze, diamond, ruby
+   - Edit and Delete buttons for each ranking
+   - Empty state with helpful prompts
+
+3. **Admin Sidebar Navigation** ✅
+   - Dedicated left sidebar (256px) for all admin pages
+   - Removed top navigation from admin pages
+   - Clean admin interface with consistent navigation
+   - Admin avatar shows username initials (non-updatable)
+
+4. **Select Component Fix** ✅
+   - Crown type select uses "none" instead of empty string
+   - Converts "none" to null when submitting to backend
+   - Prevents Radix UI Select error about empty string values
 
 ### Completed (Critical Security Fixes):
 1. **PendingPayment System** - Prevents cart tampering and payment fraud
