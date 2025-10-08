@@ -170,6 +170,8 @@ export const playerRankings = pgTable("player_rankings", {
   playerName: text("player_name").notNull(), // In-game name
   stars: integer("stars").notNull().default(0), // Achievement/score system
   rank: integer("rank").notNull(), // Position in leaderboard
+  imageUrl: text("image_url"), // Profile picture for top players
+  crownType: text("crown_type"), // gold, silver, bronze for top 3
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

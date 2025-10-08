@@ -38,6 +38,47 @@ async function requireAdmin(req: Request, res: Response, next: Function) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auto-initialize admin from environment variables (for production)
+  app.post("/api/init-admin", async (req, res) => {
+    try {
+      const adminUsername = process.env.ADMIN_USERNAME;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!adminUsername || !adminPassword) {
+        return res.status(500).json({ message: "Admin credentials not configured in environment variables" });
+      }
+
+      // Check if admin already exists
+      const existingAdmins = await db.select().from(users).where(eq(users.isAdmin, true));
+      
+      if (existingAdmins.length > 0) {
+        return res.status(200).json({ message: "Admin already initialized" });
+      }
+
+      // Hash password with bcrypt (cost factor 12)
+      const passwordHash = await bcrypt.hash(adminPassword, 12);
+
+      // Create admin user with environment credentials
+      const admin = await storage.createAdminUser(
+        adminUsername, 
+        `${adminUsername}@admin.local`, 
+        passwordHash
+      );
+
+      res.json({ 
+        message: "Admin user initialized successfully",
+        admin: {
+          id: admin.id,
+          username: admin.username,
+          isAdmin: admin.isAdmin,
+        }
+      });
+    } catch (error: any) {
+      console.error("Admin initialization error:", error);
+      res.status(500).json({ message: "Failed to initialize admin user", error: error.message });
+    }
+  });
+
   // One-time admin user creation endpoint (for initial setup)
   app.post("/api/seed-admin", async (req, res) => {
     try {
@@ -1265,6 +1306,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Payment gateways fetch error:", error);
       res.status(500).json({ message: "Failed to fetch payment gateways" });
+    }
+  });
+
+  // Admin: Update ranking image and crown
+  app.patch("/api/admin/rankings/:userId/image", requireAdmin, async (req, res) => {
+    try {
+      const { imageUrl, crownType } = req.body;
+      const ranking = await storage.updateRankingImage(req.params.userId, imageUrl, crownType);
+      if (!ranking) {
+        return res.status(404).json({ message: "Ranking not found" });
+      }
+      res.json(ranking);
+    } catch (error: any) {
+      console.error("Admin ranking image update error:", error);
+      res.status(500).json({ message: "Failed to update ranking image" });
     }
   });
 

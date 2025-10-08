@@ -187,6 +187,10 @@ var playerRankings = pgTable("player_rankings", {
   // Achievement/score system
   rank: integer("rank").notNull(),
   // Position in leaderboard
+  imageUrl: text("image_url"),
+  // Profile picture for top players
+  crownType: text("crown_type"),
+  // gold, silver, bronze for top 3
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 var insertPlayerRankingSchema = createInsertSchema(playerRankings).omit({
@@ -412,6 +416,14 @@ var DbStorage = class {
       const result = await db.insert(playerRankings).values(ranking).returning();
       return result[0];
     }
+  }
+  async updateRankingImage(userId, imageUrl, crownType) {
+    const updateData = { imageUrl, updatedAt: /* @__PURE__ */ new Date() };
+    if (crownType !== void 0) {
+      updateData.crownType = crownType;
+    }
+    const result = await db.update(playerRankings).set(updateData).where(eq(playerRankings.userId, userId)).returning();
+    return result[0];
   }
   async getTopPlayers(limit = 100) {
     return await db.select().from(playerRankings).orderBy(sql2`${playerRankings.rank} ASC`).limit(limit);
@@ -914,6 +926,36 @@ async function requireAdmin(req, res, next) {
   next();
 }
 async function registerRoutes(app2) {
+  app2.post("/api/init-admin", async (req, res) => {
+    try {
+      const adminUsername = process.env.ADMIN_USERNAME;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!adminUsername || !adminPassword) {
+        return res.status(500).json({ message: "Admin credentials not configured in environment variables" });
+      }
+      const existingAdmins = await db.select().from(users).where(eq2(users.isAdmin, true));
+      if (existingAdmins.length > 0) {
+        return res.status(200).json({ message: "Admin already initialized" });
+      }
+      const passwordHash = await bcrypt.hash(adminPassword, 12);
+      const admin = await storage.createAdminUser(
+        adminUsername,
+        `${adminUsername}@admin.local`,
+        passwordHash
+      );
+      res.json({
+        message: "Admin user initialized successfully",
+        admin: {
+          id: admin.id,
+          username: admin.username,
+          isAdmin: admin.isAdmin
+        }
+      });
+    } catch (error) {
+      console.error("Admin initialization error:", error);
+      res.status(500).json({ message: "Failed to initialize admin user", error: error.message });
+    }
+  });
   app2.post("/api/seed-admin", async (req, res) => {
     try {
       const { username, email, password, setupToken } = req.body;
@@ -1843,6 +1885,19 @@ async function registerRoutes(app2) {
     } catch (error) {
       console.error("Payment gateways fetch error:", error);
       res.status(500).json({ message: "Failed to fetch payment gateways" });
+    }
+  });
+  app2.patch("/api/admin/rankings/:userId/image", requireAdmin, async (req, res) => {
+    try {
+      const { imageUrl, crownType } = req.body;
+      const ranking = await storage.updateRankingImage(req.params.userId, imageUrl, crownType);
+      if (!ranking) {
+        return res.status(404).json({ message: "Ranking not found" });
+      }
+      res.json(ranking);
+    } catch (error) {
+      console.error("Admin ranking image update error:", error);
+      res.status(500).json({ message: "Failed to update ranking image" });
     }
   });
   const httpServer = createServer(app2);

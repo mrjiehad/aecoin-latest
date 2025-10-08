@@ -53,9 +53,19 @@ AECOIN Store is a gaming e-commerce platform for selling virtual GTA Online curr
    - Security parity with ToyyibPay flow
    - Required environment variables: BILLPLZ_SECRET_KEY, BILLPLZ_SIGNATURE_KEY
 
+7. **Admin Credentials & Management Features** - Environment-based admin system ✅
+   - ADMIN_USERNAME and ADMIN_PASSWORD environment variables for admin account
+   - /api/init-admin endpoint auto-creates admin from environment credentials
+   - Admin Package Management: Full CRUD with image upload (base64), original price, display price, featured toggle
+   - Admin Rankings Management: Upload images for top 3 players, select crown types (gold, silver, bronze, diamond, ruby)
+   - Database schema updates: rankings.imageUrl and rankings.crownType fields
+   - All admin routes protected with requireAdmin middleware
+   - Admin navigation added to header dropdown (Packages, Rankings, Coupons, Orders, Settings)
+   - Base64 image uploads with 2MB client-side validation
+
 ### Next Phase:
-7. Email domain verification (aeofficial.my on Resend)
-8. End-to-end testing of both payment gateways
+8. Email domain verification (aeofficial.my on Resend)
+9. End-to-end testing of both payment gateways
 
 ## User Preferences
 

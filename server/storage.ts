@@ -70,6 +70,7 @@ export interface IStorage {
   getAllPlayerRankings(): Promise<PlayerRanking[]>;
   getPlayerRanking(userId: string): Promise<PlayerRanking | undefined>;
   createOrUpdatePlayerRanking(ranking: InsertPlayerRanking): Promise<PlayerRanking>;
+  updateRankingImage(userId: string, imageUrl: string, crownType?: string): Promise<PlayerRanking | undefined>;
   getTopPlayers(limit: number): Promise<PlayerRanking[]>;
   
   // Payment settings operations
@@ -322,6 +323,19 @@ export class DbStorage implements IStorage {
       const result = await db.insert(playerRankings).values(ranking).returning();
       return result[0];
     }
+  }
+
+  async updateRankingImage(userId: string, imageUrl: string, crownType?: string): Promise<PlayerRanking | undefined> {
+    const updateData: any = { imageUrl, updatedAt: new Date() };
+    if (crownType !== undefined) {
+      updateData.crownType = crownType;
+    }
+    
+    const result = await db.update(playerRankings)
+      .set(updateData)
+      .where(eq(playerRankings.userId, userId))
+      .returning();
+    return result[0];
   }
 
   async getTopPlayers(limit: number = 100): Promise<PlayerRanking[]> {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, LogOut, User, Package, Shield, Settings } from "lucide-react";
+import { ShoppingCart, LogOut, User, Package, Shield, Settings, Trophy } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -195,6 +195,14 @@ export function Header({ cartItemCount = 0, onCartClick }: HeaderProps) {
                       >
                         <Shield className="w-4 h-4 mr-2" />
                         Manage Packages
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/admin/rankings")}
+                        className="font-rajdhani text-gray-300 hover:text-white focus:text-white cursor-pointer"
+                        data-testid="menu-item-admin-rankings"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        Manage Rankings
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => navigate("/admin/coupons")}
