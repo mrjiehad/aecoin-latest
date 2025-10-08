@@ -8,7 +8,8 @@ import {
   type Coupon, type InsertCoupon,
   type PendingPayment, type InsertPendingPayment,
   type PlayerRanking, type InsertPlayerRanking,
-  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings
+  type PaymentSetting, type InsertPaymentSetting,
+  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings, paymentSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, asc } from "drizzle-orm";
@@ -70,6 +71,12 @@ export interface IStorage {
   getPlayerRanking(userId: string): Promise<PlayerRanking | undefined>;
   createOrUpdatePlayerRanking(ranking: InsertPlayerRanking): Promise<PlayerRanking>;
   getTopPlayers(limit: number): Promise<PlayerRanking[]>;
+  
+  // Payment settings operations
+  getAllPaymentSettings(): Promise<PaymentSetting[]>;
+  getPaymentSetting(gateway: string): Promise<PaymentSetting | undefined>;
+  updatePaymentSetting(gateway: string, enabled: boolean): Promise<PaymentSetting | undefined>;
+  createPaymentSetting(setting: InsertPaymentSetting): Promise<PaymentSetting>;
 }
 
 export class DbStorage implements IStorage {
@@ -322,6 +329,29 @@ export class DbStorage implements IStorage {
       .from(playerRankings)
       .orderBy(sql`${playerRankings.rank} ASC`)
       .limit(limit);
+  }
+
+  // Payment settings operations
+  async getAllPaymentSettings(): Promise<PaymentSetting[]> {
+    return await db.select().from(paymentSettings).orderBy(sql`${paymentSettings.displayOrder} ASC`);
+  }
+
+  async getPaymentSetting(gateway: string): Promise<PaymentSetting | undefined> {
+    const result = await db.select().from(paymentSettings).where(eq(paymentSettings.gateway, gateway)).limit(1);
+    return result[0];
+  }
+
+  async updatePaymentSetting(gateway: string, enabled: boolean): Promise<PaymentSetting | undefined> {
+    const result = await db.update(paymentSettings)
+      .set({ enabled, updatedAt: new Date() })
+      .where(eq(paymentSettings.gateway, gateway))
+      .returning();
+    return result[0];
+  }
+
+  async createPaymentSetting(setting: InsertPaymentSetting): Promise<PaymentSetting> {
+    const result = await db.insert(paymentSettings).values(setting).returning();
+    return result[0];
   }
 }
 

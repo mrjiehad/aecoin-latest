@@ -10,7 +10,7 @@ import { ArrowLeft, Wallet, Tag, Loader2, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { CartItem, Package, Coupon } from "@shared/schema";
+import type { CartItem, Package, Coupon, PaymentSetting } from "@shared/schema";
 
 interface CartItemWithPackage extends CartItem {
   package: Package;
@@ -23,7 +23,7 @@ export default function Checkout() {
   
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"toyyibpay" | "billplz">("toyyibpay");
+  const [paymentMethod, setPaymentMethod] = useState<"toyyibpay" | "billplz">("billplz");
   
   // Billing information
   const [billingInfo, setBillingInfo] = useState({
@@ -56,6 +56,18 @@ export default function Checkout() {
     queryKey: ["/api/cart"],
     enabled: !!user,
   });
+
+  // Fetch enabled payment gateways
+  const { data: enabledGateways = [] } = useQuery<PaymentSetting[]>({
+    queryKey: ['/api/payment-gateways'],
+  });
+
+  // Update default payment method when gateways are loaded
+  useEffect(() => {
+    if (enabledGateways.length > 0 && !enabledGateways.find(g => g.gateway === paymentMethod)) {
+      setPaymentMethod(enabledGateways[0].gateway as "toyyibpay" | "billplz");
+    }
+  }, [enabledGateways]);
 
   // Validate coupon mutation
   const validateCoupon = useMutation({
@@ -323,42 +335,27 @@ export default function Checkout() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setPaymentMethod("toyyibpay")}
-                    className={`p-6 rounded-2xl border-2 transition-all ${
-                      paymentMethod === "toyyibpay"
-                        ? "border-neon-yellow bg-neon-yellow/10"
-                        : "border-white/10 hover:border-white/20"
-                    }`}
-                    data-testid="button-payment-toyyibpay"
-                  >
-                    <Wallet className="w-12 h-12 mx-auto mb-3 text-neon-yellow" />
-                    <p className="font-rajdhani font-bold text-white text-center">
-                      ToyyibPay
-                    </p>
-                    <p className="text-xs text-gray-400 text-center mt-1">
-                      FPX, Online Banking
-                    </p>
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod("billplz")}
-                    className={`p-6 rounded-2xl border-2 transition-all ${
-                      paymentMethod === "billplz"
-                        ? "border-neon-yellow bg-neon-yellow/10"
-                        : "border-white/10 hover:border-white/20"
-                    }`}
-                    data-testid="button-payment-billplz"
-                  >
-                    <Wallet className="w-12 h-12 mx-auto mb-3 text-neon-yellow" />
-                    <p className="font-rajdhani font-bold text-white text-center">
-                      Billplz
-                    </p>
-                    <p className="text-xs text-gray-400 text-center mt-1">
-                      FPX, Cards, E-Wallets
-                    </p>
-                  </button>
+                <div className={`grid gap-4 ${enabledGateways.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  {enabledGateways.map((gateway) => (
+                    <button
+                      key={gateway.gateway}
+                      onClick={() => setPaymentMethod(gateway.gateway as "toyyibpay" | "billplz")}
+                      className={`p-6 rounded-2xl border-2 transition-all ${
+                        paymentMethod === gateway.gateway
+                          ? "border-neon-yellow bg-neon-yellow/10"
+                          : "border-white/10 hover:border-white/20"
+                      }`}
+                      data-testid={`button-payment-${gateway.gateway}`}
+                    >
+                      <Wallet className="w-12 h-12 mx-auto mb-3 text-neon-yellow" />
+                      <p className="font-rajdhani font-bold text-white text-center">
+                        {gateway.gateway === 'toyyibpay' ? 'ToyyibPay' : 'Billplz'}
+                      </p>
+                      <p className="text-xs text-gray-400 text-center mt-1">
+                        {gateway.gateway === 'toyyibpay' ? 'FPX, Online Banking' : 'FPX, Cards, E-Wallets'}
+                      </p>
+                    </button>
+                  ))}
                 </div>
               </CardContent>
             </Card>

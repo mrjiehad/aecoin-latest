@@ -179,3 +179,20 @@ export const insertPlayerRankingSchema = createInsertSchema(playerRankings).omit
 });
 export type InsertPlayerRanking = z.infer<typeof insertPlayerRankingSchema>;
 export type PlayerRanking = typeof playerRankings.$inferSelect;
+
+// Payment settings table - Configure payment gateway visibility
+export const paymentSettings = pgTable("payment_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gateway: text("gateway").notNull().unique(), // toyyibpay, billplz
+  enabled: boolean("enabled").notNull().default(true),
+  displayName: text("display_name").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertPaymentSetting = z.infer<typeof insertPaymentSettingSchema>;
+export type PaymentSetting = typeof paymentSettings.$inferSelect;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, LogOut, User, Package, Shield } from "lucide-react";
+import { ShoppingCart, LogOut, User, Package, Shield, Settings } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -203,6 +203,14 @@ export function Header({ cartItemCount = 0, onCartClick }: HeaderProps) {
                       >
                         <Package className="w-4 h-4 mr-2" />
                         Manage Coupons
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/admin/settings")}
+                        className="font-rajdhani text-gray-300 hover:text-white focus:text-white cursor-pointer"
+                        data-testid="menu-item-admin-settings"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
                       </DropdownMenuItem>
                     </>
                   )}

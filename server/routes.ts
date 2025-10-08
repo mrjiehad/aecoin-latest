@@ -1192,6 +1192,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Get payment settings
+  app.get("/api/admin/payment-settings", requireAdmin, async (req, res) => {
+    try {
+      let settings = await storage.getAllPaymentSettings();
+      
+      // Initialize settings if not exist
+      if (settings.length === 0) {
+        await storage.createPaymentSetting({
+          gateway: 'billplz',
+          enabled: true,
+          displayName: 'Billplz (FPX, Cards, E-Wallets)',
+          displayOrder: 1,
+        });
+        await storage.createPaymentSetting({
+          gateway: 'toyyibpay',
+          enabled: false,
+          displayName: 'ToyyibPay (FPX, Online Banking)',
+          displayOrder: 2,
+        });
+        settings = await storage.getAllPaymentSettings();
+      }
+      
+      res.json(settings);
+    } catch (error: any) {
+      console.error("Payment settings fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payment settings" });
+    }
+  });
+
+  // Admin: Update payment setting
+  app.patch("/api/admin/payment-settings/:gateway", requireAdmin, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      const setting = await storage.updatePaymentSetting(req.params.gateway, enabled);
+      if (!setting) {
+        return res.status(404).json({ message: "Payment setting not found" });
+      }
+      res.json(setting);
+    } catch (error: any) {
+      console.error("Payment setting update error:", error);
+      res.status(500).json({ message: "Failed to update payment setting" });
+    }
+  });
+
+  // Public: Get enabled payment gateways (for checkout page)
+  app.get("/api/payment-gateways", async (req, res) => {
+    try {
+      const allSettings = await storage.getAllPaymentSettings();
+      
+      // Initialize if empty
+      if (allSettings.length === 0) {
+        await storage.createPaymentSetting({
+          gateway: 'billplz',
+          enabled: true,
+          displayName: 'Billplz (FPX, Cards, E-Wallets)',
+          displayOrder: 1,
+        });
+        await storage.createPaymentSetting({
+          gateway: 'toyyibpay',
+          enabled: false,
+          displayName: 'ToyyibPay (FPX, Online Banking)',
+          displayOrder: 2,
+        });
+        const settings = await storage.getAllPaymentSettings();
+        const enabled = settings.filter(s => s.enabled);
+        return res.json(enabled);
+      }
+      
+      const enabledGateways = allSettings.filter(s => s.enabled);
+      res.json(enabledGateways);
+    } catch (error: any) {
+      console.error("Payment gateways fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payment gateways" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

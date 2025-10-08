@@ -21,6 +21,7 @@ __export(schema_exports, {
   insertOrderItemSchema: () => insertOrderItemSchema,
   insertOrderSchema: () => insertOrderSchema,
   insertPackageSchema: () => insertPackageSchema,
+  insertPaymentSettingSchema: () => insertPaymentSettingSchema,
   insertPendingPaymentSchema: () => insertPendingPaymentSchema,
   insertPlayerRankingSchema: () => insertPlayerRankingSchema,
   insertRedemptionCodeSchema: () => insertRedemptionCodeSchema,
@@ -28,6 +29,7 @@ __export(schema_exports, {
   orderItems: () => orderItems,
   orders: () => orders,
   packages: () => packages,
+  paymentSettings: () => paymentSettings,
   pendingPayments: () => pendingPayments,
   playerRankings: () => playerRankings,
   redemptionCodes: () => redemptionCodes,
@@ -188,6 +190,19 @@ var playerRankings = pgTable("player_rankings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 var insertPlayerRankingSchema = createInsertSchema(playerRankings).omit({
+  id: true,
+  updatedAt: true
+});
+var paymentSettings = pgTable("payment_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gateway: text("gateway").notNull().unique(),
+  // toyyibpay, billplz
+  enabled: boolean("enabled").notNull().default(true),
+  displayName: text("display_name").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({
   id: true,
   updatedAt: true
 });
@@ -400,6 +415,22 @@ var DbStorage = class {
   }
   async getTopPlayers(limit = 100) {
     return await db.select().from(playerRankings).orderBy(sql2`${playerRankings.rank} ASC`).limit(limit);
+  }
+  // Payment settings operations
+  async getAllPaymentSettings() {
+    return await db.select().from(paymentSettings).orderBy(sql2`${paymentSettings.displayOrder} ASC`);
+  }
+  async getPaymentSetting(gateway) {
+    const result = await db.select().from(paymentSettings).where(eq(paymentSettings.gateway, gateway)).limit(1);
+    return result[0];
+  }
+  async updatePaymentSetting(gateway, enabled) {
+    const result = await db.update(paymentSettings).set({ enabled, updatedAt: /* @__PURE__ */ new Date() }).where(eq(paymentSettings.gateway, gateway)).returning();
+    return result[0];
+  }
+  async createPaymentSetting(setting) {
+    const result = await db.insert(paymentSettings).values(setting).returning();
+    return result[0];
   }
 };
 var storage = new DbStorage();
@@ -1748,6 +1779,70 @@ async function registerRoutes(app2) {
     } catch (error) {
       console.error("Admin coupon deletion error:", error);
       res.status(500).json({ message: "Failed to delete coupon" });
+    }
+  });
+  app2.get("/api/admin/payment-settings", requireAdmin, async (req, res) => {
+    try {
+      let settings = await storage.getAllPaymentSettings();
+      if (settings.length === 0) {
+        await storage.createPaymentSetting({
+          gateway: "billplz",
+          enabled: true,
+          displayName: "Billplz (FPX, Cards, E-Wallets)",
+          displayOrder: 1
+        });
+        await storage.createPaymentSetting({
+          gateway: "toyyibpay",
+          enabled: false,
+          displayName: "ToyyibPay (FPX, Online Banking)",
+          displayOrder: 2
+        });
+        settings = await storage.getAllPaymentSettings();
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error("Payment settings fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payment settings" });
+    }
+  });
+  app2.patch("/api/admin/payment-settings/:gateway", requireAdmin, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      const setting = await storage.updatePaymentSetting(req.params.gateway, enabled);
+      if (!setting) {
+        return res.status(404).json({ message: "Payment setting not found" });
+      }
+      res.json(setting);
+    } catch (error) {
+      console.error("Payment setting update error:", error);
+      res.status(500).json({ message: "Failed to update payment setting" });
+    }
+  });
+  app2.get("/api/payment-gateways", async (req, res) => {
+    try {
+      const allSettings = await storage.getAllPaymentSettings();
+      if (allSettings.length === 0) {
+        await storage.createPaymentSetting({
+          gateway: "billplz",
+          enabled: true,
+          displayName: "Billplz (FPX, Cards, E-Wallets)",
+          displayOrder: 1
+        });
+        await storage.createPaymentSetting({
+          gateway: "toyyibpay",
+          enabled: false,
+          displayName: "ToyyibPay (FPX, Online Banking)",
+          displayOrder: 2
+        });
+        const settings = await storage.getAllPaymentSettings();
+        const enabled = settings.filter((s) => s.enabled);
+        return res.json(enabled);
+      }
+      const enabledGateways = allSettings.filter((s) => s.enabled);
+      res.json(enabledGateways);
+    } catch (error) {
+      console.error("Payment gateways fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payment gateways" });
     }
   });
   const httpServer = createServer(app2);
