@@ -14,6 +14,7 @@ import PaymentFailed from "@/pages/PaymentFailed";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminPackages from "@/pages/AdminPackages";
 import AdminRankings from "@/pages/AdminRankings";
+import AdminGallery from "@/pages/AdminGallery";
 import AdminCoupons from "@/pages/AdminCoupons";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminLogin from "@/pages/AdminLogin";
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/packages" component={AdminPackages} />
       <Route path="/admin/rankings" component={AdminRankings} />
+      <Route path="/admin/gallery" component={AdminGallery} />
       <Route path="/admin/coupons" component={AdminCoupons} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route component={NotFound} />

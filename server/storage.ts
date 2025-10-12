@@ -9,7 +9,8 @@ import {
   type PendingPayment, type InsertPendingPayment,
   type PlayerRanking, type InsertPlayerRanking,
   type PaymentSetting, type InsertPaymentSetting,
-  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings, paymentSettings
+  type GalleryImage, type InsertGalleryImage,
+  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings, paymentSettings, galleryImages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, asc } from "drizzle-orm";
@@ -79,6 +80,14 @@ export interface IStorage {
   getPaymentSetting(gateway: string): Promise<PaymentSetting | undefined>;
   updatePaymentSetting(gateway: string, enabled: boolean): Promise<PaymentSetting | undefined>;
   createPaymentSetting(setting: InsertPaymentSetting): Promise<PaymentSetting>;
+  
+  // Gallery operations
+  getActiveGalleryImages(): Promise<GalleryImage[]>;
+  getAllGalleryImages(): Promise<GalleryImage[]>;
+  getGalleryImage(id: string): Promise<GalleryImage | undefined>;
+  createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
+  updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined>;
+  deleteGalleryImage(id: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -372,6 +381,43 @@ export class DbStorage implements IStorage {
   async createPaymentSetting(setting: InsertPaymentSetting): Promise<PaymentSetting> {
     const result = await db.insert(paymentSettings).values(setting).returning();
     return result[0];
+  }
+
+  // Gallery operations
+  async getActiveGalleryImages(): Promise<GalleryImage[]> {
+    return await db.select()
+      .from(galleryImages)
+      .where(eq(galleryImages.isActive, true))
+      .orderBy(sql`${galleryImages.displayOrder} ASC, ${galleryImages.createdAt} DESC`);
+  }
+
+  async getAllGalleryImages(): Promise<GalleryImage[]> {
+    return await db.select()
+      .from(galleryImages)
+      .orderBy(sql`${galleryImages.displayOrder} ASC, ${galleryImages.createdAt} DESC`);
+  }
+
+  async getGalleryImage(id: string): Promise<GalleryImage | undefined> {
+    const result = await db.select().from(galleryImages).where(eq(galleryImages.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage> {
+    const result = await db.insert(galleryImages).values(image).returning();
+    return result[0];
+  }
+
+  async updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined> {
+    const result = await db.update(galleryImages)
+      .set({ ...image, updatedAt: new Date() })
+      .where(eq(galleryImages.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGalleryImage(id: string): Promise<boolean> {
+    const result = await db.delete(galleryImages).where(eq(galleryImages.id, id)).returning();
+    return result.length > 0;
   }
 }
 

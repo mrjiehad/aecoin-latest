@@ -1367,6 +1367,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public: Get all active gallery images
+  app.get("/api/gallery", async (req, res) => {
+    try {
+      const images = await storage.getActiveGalleryImages();
+      res.json(images);
+    } catch (error: any) {
+      console.error("Gallery fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch gallery images" });
+    }
+  });
+
+  // Admin: Get all gallery images (including inactive)
+  app.get("/api/admin/gallery", requireAdmin, async (req, res) => {
+    try {
+      const images = await storage.getAllGalleryImages();
+      res.json(images);
+    } catch (error: any) {
+      console.error("Admin gallery fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch gallery images" });
+    }
+  });
+
+  // Admin: Create gallery image
+  app.post("/api/admin/gallery", requireAdmin, async (req, res) => {
+    try {
+      console.log("Creating gallery image with data:", req.body);
+      const image = await storage.createGalleryImage(req.body);
+      console.log("Gallery image created successfully:", image);
+      res.json(image);
+    } catch (error: any) {
+      console.error("Admin gallery creation error:", error);
+      console.error("Error details:", error.message, error.stack);
+      res.status(500).json({ message: error.message || "Failed to create gallery image" });
+    }
+  });
+
+  // Admin: Update gallery image
+  app.patch("/api/admin/gallery/:id", requireAdmin, async (req, res) => {
+    try {
+      const image = await storage.updateGalleryImage(req.params.id, req.body);
+      if (!image) {
+        return res.status(404).json({ message: "Gallery image not found" });
+      }
+      res.json(image);
+    } catch (error: any) {
+      console.error("Admin gallery update error:", error);
+      res.status(500).json({ message: "Failed to update gallery image" });
+    }
+  });
+
+  // Admin: Delete gallery image
+  app.delete("/api/admin/gallery/:id", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteGalleryImage(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Gallery image not found" });
+      }
+      res.json({ message: "Gallery image deleted successfully" });
+    } catch (error: any) {
+      console.error("Admin gallery deletion error:", error);
+      res.status(500).json({ message: "Failed to delete gallery image" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -198,3 +198,24 @@ export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).om
 });
 export type InsertPaymentSetting = z.infer<typeof insertPaymentSettingSchema>;
 export type PaymentSetting = typeof paymentSettings.$inferSelect;
+
+// Gallery images table - Manage gallery pictures with categories
+export const galleryImages = pgTable("gallery_images", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  imageUrl: text("image_url").notNull(), // Image URL or base64
+  category: text("category").notNull(), // Vehicles, Properties, Weapons, etc.
+  title: text("title").notNull(), // Display title
+  description: text("description"), // Optional description
+  displayOrder: integer("display_order").notNull().default(0), // For sorting
+  isActive: boolean("is_active").notNull().default(true), // Show/hide
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
+export type GalleryImage = typeof galleryImages.$inferSelect;

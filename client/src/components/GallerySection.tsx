@@ -1,7 +1,18 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+
+interface GalleryImage {
+  id: string;
+  imageUrl: string;
+  category: string;
+  title: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
 
 interface GallerySectionProps {
-  images: string[];
   onCtaClick?: () => void;
 }
 
@@ -17,30 +28,22 @@ const categories = [
   "Lifestyle",
 ];
 
-const categoryLabels = [
-  { category: "Vehicles", label: "Luxury Supercars" },
-  { category: "Properties", label: "High-End Apartments" },
-  { category: "Weapons", label: "Military Equipment" },
-  { category: "Heists", label: "Criminal Operations" },
-  { category: "Business", label: "Nightclub Empire" },
-  { category: "Racing", label: "Street Racing" },
-  { category: "Territory", label: "Gang Territory" },
-  { category: "Lifestyle", label: "Penthouse Living" },
-];
-
-export function GallerySection({ images, onCtaClick }: GallerySectionProps) {
+export function GallerySection({ onCtaClick }: GallerySectionProps) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [showAll, setShowAll] = useState(false);
 
-  // Map images to categories for filtering
-  const imageCategories = images.map((_, index) => {
-    const labelData = categoryLabels[index % categoryLabels.length];
-    return labelData?.category || "All";
+  const { data: images = [], isLoading } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery"],
   });
 
   // Filter images based on active category
   const filteredImages = activeCategory === "All" 
     ? images 
-    : images.filter((_, index) => imageCategories[index] === activeCategory);
+    : images.filter((image) => image.category === activeCategory);
+
+  // Show only 8 images by default, or all if "Load More" is clicked
+  const displayedImages = showAll ? filteredImages : filteredImages.slice(0, 8);
+  const hasMore = filteredImages.length > 8;
 
   return (
     <section id="gallery" className="min-h-screen bg-[#000000] flex items-center py-20">
@@ -80,43 +83,64 @@ export function GallerySection({ images, onCtaClick }: GallerySectionProps) {
         </div>
 
         {/* Show filtered images */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-          {filteredImages.length > 0 ? (
-            filteredImages.slice(0, 8).map((image, index) => {
-              const originalIndex = images.indexOf(image);
-              const labelData = categoryLabels[originalIndex % categoryLabels.length];
-              return (
-                <div
-                  key={`${image}-${index}`}
-                  className="relative aspect-[4/3] overflow-hidden group cursor-pointer border-2 border-white/10 hover:border-neon-yellow/50 transition-all"
-                  data-testid={`img-gallery-${index}`}
-                >
-                  <img
-                    src={image}
-                    alt={labelData?.label || `Gallery ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="text-neon-yellow font-russo text-xs font-bold uppercase tracking-wide mb-1">
-                        {labelData?.category}
-                      </div>
-                      <div className="text-white font-bebas text-xl">
-                        {labelData?.label}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="inline-block w-16 h-16 border-4 border-neon-yellow border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+              {displayedImages.length > 0 ? (
+                displayedImages.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="relative aspect-[4/3] overflow-hidden group cursor-pointer border-2 border-white/10 hover:border-neon-yellow/50 transition-all"
+                    data-testid={`img-gallery-${index}`}
+                  >
+                    <img
+                      src={image.imageUrl}
+                      alt={image.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <div className="text-neon-yellow font-russo text-xs font-bold uppercase tracking-wide mb-1">
+                          {image.category}
+                        </div>
+                        <div className="text-white font-bebas text-xl">
+                          {image.title}
+                        </div>
+                        {image.description && (
+                          <div className="text-gray-300 font-rajdhani text-sm mt-1 line-clamp-2">
+                            {image.description}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-400 font-rajdhani text-lg">
+                    No images in this category yet
+                  </p>
                 </div>
-              );
-            })
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-400 font-rajdhani text-lg">
-                No images in this category yet
-              </p>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Load More Button */}
+            {hasMore && !showAll && (
+              <div className="text-center">
+                <Button
+                  onClick={() => setShowAll(true)}
+                  className="bg-neon-yellow hover:bg-yellow-400 text-black font-bold text-base px-12 h-14 uppercase font-russo tracking-wider shadow-lg shadow-neon-yellow/30 transition-all duration-300 hover:scale-105"
+                >
+                  LOAD MORE
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

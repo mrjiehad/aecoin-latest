@@ -215,7 +215,7 @@ export default function Home() {
       </ScrollFadeIn>
 
       <ScrollFadeIn delay={0.1}>
-        <GallerySection images={galleryImages} onCtaClick={scrollToPackages} />
+        <GallerySection onCtaClick={scrollToPackages} />
       </ScrollFadeIn>
 
       <ScrollFadeIn delay={0.1}>
