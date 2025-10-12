@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { ReferenceHero } from "@/components/ReferenceHero";
+import { ModernGTAHero } from "@/components/ModernGTAHero";
 import { ScrollFadeIn } from "@/components/ScrollFadeIn";
 import { BackToTop } from "@/components/BackToTop";
 import { PackagesSection } from "@/components/PackagesSection";
@@ -204,7 +204,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#000000]">
       <Header cartItemCount={cartItems.length} onCartClick={handleCartClick} />
-      <ReferenceHero
+      <ModernGTAHero
         onShopClick={scrollToPackages}
         onPackagesClick={scrollToPackages}
         onRankingsClick={goToRankings}

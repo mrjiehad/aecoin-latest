@@ -75,48 +75,63 @@ export function Header({ cartItemCount = 0, onCartClick }: HeaderProps) {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div
-            className="text-xl font-rajdhani font-bold cursor-pointer text-white uppercase tracking-wider"
+            className="cursor-pointer group"
             onClick={goToHome}
             data-testid="logo-aecoin-store"
           >
-            AECOIN<span className="text-neon-yellow">.STORE</span>
+            {/* Futuristic Logo Design */}
+            <div className="relative">
+              <div className="text-2xl font-russo font-bold text-white uppercase tracking-wider transition-all duration-300 group-hover:text-neon-yellow"
+                   style={{
+                     textShadow: '2px 2px 0px rgba(0,0,0,0.8), 0 0 20px rgba(255, 215, 0, 0.3)'
+                   }}>
+                AE<span className="text-neon-yellow">.OFFICIAL</span>
+              </div>
+              {/* Accent line underneath */}
+              <div className="h-0.5 w-full bg-gradient-to-r from-neon-yellow via-neon-yellow to-transparent mt-0.5 group-hover:shadow-lg group-hover:shadow-neon-yellow/50 transition-all" />
+            </div>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
             <button
               onClick={goToHome}
-              className="text-gray-300 hover:text-white transition-colors font-rajdhani font-semibold uppercase text-sm"
+              className="text-gray-300 hover:text-neon-yellow transition-all duration-300 font-russo font-bold uppercase text-sm tracking-wider relative group/nav"
               data-testid="link-home"
             >
               HOME
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-yellow group-hover/nav:w-full transition-all duration-300" />
             </button>
             <button
               onClick={() => scrollToSection("packages")}
-              className="text-gray-300 hover:text-white transition-colors font-rajdhani font-semibold uppercase text-sm"
+              className="text-gray-300 hover:text-neon-yellow transition-all duration-300 font-russo font-bold uppercase text-sm tracking-wider relative group/nav"
               data-testid="link-packages"
             >
               PACKAGES
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-yellow group-hover/nav:w-full transition-all duration-300" />
             </button>
             <button
               onClick={() => navigate("/rankings")}
-              className="text-gray-300 hover:text-white transition-colors font-rajdhani font-semibold uppercase text-sm"
+              className="text-gray-300 hover:text-neon-yellow transition-all duration-300 font-russo font-bold uppercase text-sm tracking-wider relative group/nav"
               data-testid="link-rankings"
             >
               RANKINGS
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-yellow group-hover/nav:w-full transition-all duration-300" />
             </button>
             <button
               onClick={() => scrollToSection("gallery")}
-              className="text-gray-300 hover:text-white transition-colors font-rajdhani font-semibold uppercase text-sm"
+              className="text-gray-300 hover:text-neon-yellow transition-all duration-300 font-russo font-bold uppercase text-sm tracking-wider relative group/nav"
               data-testid="link-gallery"
             >
               GALLERY
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-yellow group-hover/nav:w-full transition-all duration-300" />
             </button>
             <button
               onClick={() => scrollToSection("faq")}
-              className="text-gray-300 hover:text-white transition-colors font-rajdhani font-semibold uppercase text-sm"
+              className="text-gray-300 hover:text-neon-yellow transition-all duration-300 font-russo font-bold uppercase text-sm tracking-wider relative group/nav"
               data-testid="link-faq"
             >
               FAQ
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-yellow group-hover/nav:w-full transition-all duration-300" />
             </button>
           </nav>
 

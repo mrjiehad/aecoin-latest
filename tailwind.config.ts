@@ -90,9 +90,11 @@ export default {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
-        bebas: ["Bebas Neue", "sans-serif"],
-        rajdhani: ["Rajdhani", "sans-serif"],
-        teko: ["Teko", "sans-serif"],
+        bebas: ["Bebas Neue", "Impact", "sans-serif"],
+        rajdhani: ["Rajdhani", "Roboto Condensed", "sans-serif"],
+        teko: ["Teko", "Oswald", "sans-serif"],
+        orbitron: ["Orbitron", "sans-serif"],
+        russo: ["Russo One", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

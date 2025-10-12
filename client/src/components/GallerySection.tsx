@@ -31,6 +31,17 @@ const categoryLabels = [
 export function GallerySection({ images, onCtaClick }: GallerySectionProps) {
   const [activeCategory, setActiveCategory] = useState("All");
 
+  // Map images to categories for filtering
+  const imageCategories = images.map((_, index) => {
+    const labelData = categoryLabels[index % categoryLabels.length];
+    return labelData?.category || "All";
+  });
+
+  // Filter images based on active category
+  const filteredImages = activeCategory === "All" 
+    ? images 
+    : images.filter((_, index) => imageCategories[index] === activeCategory);
+
   return (
     <section id="gallery" className="min-h-screen bg-[#000000] flex items-center py-20">
       <div className="container mx-auto px-4">
@@ -56,10 +67,10 @@ export function GallerySection({ images, onCtaClick }: GallerySectionProps) {
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-6 py-2 font-rajdhani font-semibold text-sm uppercase tracking-wide transition-all ${
+              className={`px-6 py-2 font-russo font-bold text-sm uppercase tracking-wide transition-all ${
                 activeCategory === category
-                  ? "bg-neon-yellow text-black"
-                  : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-neon-yellow text-black shadow-lg shadow-neon-yellow/30"
+                  : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10"
               }`}
               data-testid={`tab-${category.toLowerCase()}`}
             >
@@ -68,33 +79,43 @@ export function GallerySection({ images, onCtaClick }: GallerySectionProps) {
           ))}
         </div>
 
+        {/* Show filtered images */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-          {images.slice(0, 8).map((image, index) => {
-            const labelData = categoryLabels[index % categoryLabels.length];
-            return (
-              <div
-                key={index}
-                className="relative aspect-[4/3] overflow-hidden group cursor-pointer"
-                data-testid={`img-gallery-${index}`}
-              >
-                <img
-                  src={image}
-                  alt={labelData?.label || `Gallery ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="text-neon-yellow font-rajdhani text-xs font-semibold uppercase tracking-wide mb-1">
-                      {labelData?.category}
-                    </div>
-                    <div className="text-white font-bebas text-xl">
-                      {labelData?.label}
+          {filteredImages.length > 0 ? (
+            filteredImages.slice(0, 8).map((image, index) => {
+              const originalIndex = images.indexOf(image);
+              const labelData = categoryLabels[originalIndex % categoryLabels.length];
+              return (
+                <div
+                  key={`${image}-${index}`}
+                  className="relative aspect-[4/3] overflow-hidden group cursor-pointer border-2 border-white/10 hover:border-neon-yellow/50 transition-all"
+                  data-testid={`img-gallery-${index}`}
+                >
+                  <img
+                    src={image}
+                    alt={labelData?.label || `Gallery ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <div className="text-neon-yellow font-russo text-xs font-bold uppercase tracking-wide mb-1">
+                        {labelData?.category}
+                      </div>
+                      <div className="text-white font-bebas text-xl">
+                        {labelData?.label}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400 font-rajdhani text-lg">
+                No images in this category yet
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

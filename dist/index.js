@@ -180,7 +180,8 @@ var insertCouponSchema = createInsertSchema(coupons).omit({
 });
 var playerRankings = pgTable("player_rankings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().unique(),
+  // Player ID (doesn't need to be a registered user)
   playerName: text("player_name").notNull(),
   // In-game name
   stars: integer("stars").notNull().default(0),
@@ -424,6 +425,10 @@ var DbStorage = class {
     }
     const result = await db.update(playerRankings).set(updateData).where(eq(playerRankings.userId, userId)).returning();
     return result[0];
+  }
+  async deletePlayerRanking(userId) {
+    const result = await db.delete(playerRankings).where(eq(playerRankings.userId, userId)).returning();
+    return result.length > 0;
   }
   async getTopPlayers(limit = 100) {
     return await db.select().from(playerRankings).orderBy(sql2`${playerRankings.rank} ASC`).limit(limit);
@@ -1887,6 +1892,31 @@ async function registerRoutes(app2) {
       res.status(500).json({ message: "Failed to fetch payment gateways" });
     }
   });
+  app2.post("/api/admin/rankings", requireAdmin, async (req, res) => {
+    try {
+      const count = await storage.getAllPlayerRankings();
+      if (count.length >= 10 && !req.body.userId) {
+        return res.status(400).json({ message: "Maximum 10 players allowed" });
+      }
+      const ranking = await storage.createOrUpdatePlayerRanking(req.body);
+      res.json(ranking);
+    } catch (error) {
+      console.error("Admin ranking creation error:", error);
+      res.status(500).json({ message: "Failed to create ranking" });
+    }
+  });
+  app2.patch("/api/admin/rankings/:userId", requireAdmin, async (req, res) => {
+    try {
+      const ranking = await storage.createOrUpdatePlayerRanking({
+        userId: req.params.userId,
+        ...req.body
+      });
+      res.json(ranking);
+    } catch (error) {
+      console.error("Admin ranking update error:", error);
+      res.status(500).json({ message: "Failed to update ranking" });
+    }
+  });
   app2.patch("/api/admin/rankings/:userId/image", requireAdmin, async (req, res) => {
     try {
       const { imageUrl, crownType } = req.body;
@@ -1898,6 +1928,18 @@ async function registerRoutes(app2) {
     } catch (error) {
       console.error("Admin ranking image update error:", error);
       res.status(500).json({ message: "Failed to update ranking image" });
+    }
+  });
+  app2.delete("/api/admin/rankings/:userId", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deletePlayerRanking(req.params.userId);
+      if (!success) {
+        return res.status(404).json({ message: "Ranking not found" });
+      }
+      res.json({ message: "Ranking deleted successfully" });
+    } catch (error) {
+      console.error("Admin ranking deletion error:", error);
+      res.status(500).json({ message: "Failed to delete ranking" });
     }
   });
   const httpServer = createServer(app2);
@@ -1935,13 +1977,13 @@ app.use((req, res, next) => {
   if (req.path === "/api/billplz/callback") {
     return next();
   }
-  express.json()(req, res, next);
+  express.json({ limit: "10mb" })(req, res, next);
 });
 app.use((req, res, next) => {
   if (req.path === "/api/billplz/callback") {
     return next();
   }
-  express.urlencoded({ extended: false })(req, res, next);
+  express.urlencoded({ extended: false, limit: "10mb" })(req, res, next);
 });
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET environment variable is required");
@@ -1998,11 +2040,14 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
   const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen({
+  const listenOptions = {
     port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
+    host: "0.0.0.0"
+  };
+  if (process.platform !== "win32") {
+    listenOptions.reusePort = true;
+  }
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
   });
 })();

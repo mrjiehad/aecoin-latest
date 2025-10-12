@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Russo+One&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -27,6 +29,48 @@
   50% { filter: drop-shadow(0 0 80px rgba(255, 215, 0, 0.8)); }
 }
 
+@keyframes neon-pulse {
+  0%, 100% { 
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8),
+                 0 0 20px rgba(255, 215, 0, 0.2);
+  }
+  50% { 
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8),
+                 0 0 25px rgba(255, 215, 0, 0.3);
+  }
+}
+
+@keyframes glow-border {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.3),
+                0 0 10px rgba(255, 215, 0, 0.2),
+                inset 0 0 10px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6),
+                0 0 20px rgba(255, 215, 0, 0.4),
+                inset 0 0 15px rgba(255, 215, 0, 0.2);
+  }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
@@ -53,6 +97,66 @@
 
 .animate-title-glow {
   animation: title-glow 3s ease-in-out infinite;
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+.animate-glow-border {
+  animation: glow-border 2s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 3s linear infinite;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+/* GTA 5 Themed Utilities */
+.gta-text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8),
+               0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.gta-gold-glow {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4),
+              0 0 40px rgba(255, 215, 0, 0.2),
+              inset 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+.gta-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gta-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5),
+              0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Cinematic gradient overlays */
+.gta-gradient-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.7) 50%,
+    rgba(255, 215, 0, 0.1) 100%
+  );
+}
+
+.gta-radial-glow {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 215, 0, 0.15) 0%,
+    transparent 70%
+  );
 }
 
 @tailwind base;
